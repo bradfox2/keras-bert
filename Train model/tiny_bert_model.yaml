@@ -1,0 +1,444 @@
+backend: tensorflow
+class_name: Model
+config:
+  input_layers:
+  - [Input-Token, 0, 0]
+  - [Input-Segment, 0, 0]
+  - [Input-Masked, 0, 0]
+  layers:
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, 420]
+      dtype: float32
+      name: Input-Token
+      sparse: false
+    inbound_nodes: []
+    name: Input-Token
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, 420]
+      dtype: float32
+      name: Input-Segment
+      sparse: false
+    inbound_nodes: []
+    name: Input-Segment
+  - class_name: TokenEmbedding
+    config:
+      activity_regularizer: null
+      batch_input_shape: !!python/tuple [null, null]
+      dtype: float32
+      embeddings_constraint: null
+      embeddings_initializer:
+        class_name: RandomUniform
+        config: {maxval: 0.05, minval: -0.05, seed: null}
+      embeddings_regularizer: null
+      input_dim: 16714
+      input_length: null
+      mask_zero: true
+      name: Embedding-Token
+      output_dim: 256
+      trainable: true
+    inbound_nodes:
+    - - - Input-Token
+        - 0
+        - 0
+        - {}
+    name: Embedding-Token
+  - class_name: Embedding
+    config:
+      activity_regularizer: null
+      batch_input_shape: !!python/tuple [null, null]
+      dtype: float32
+      embeddings_constraint: null
+      embeddings_initializer:
+        class_name: RandomUniform
+        config: {maxval: 0.05, minval: -0.05, seed: null}
+      embeddings_regularizer: null
+      input_dim: 2
+      input_length: null
+      mask_zero: false
+      name: Embedding-Segment
+      output_dim: 256
+      trainable: true
+    inbound_nodes:
+    - - - Input-Segment
+        - 0
+        - 0
+        - {}
+    name: Embedding-Segment
+  - class_name: Add
+    config: {name: Embedding-Token-Segment, trainable: true}
+    inbound_nodes:
+    - - - Embedding-Token
+        - 0
+        - 0
+        - &id001 {}
+      - - Embedding-Segment
+        - 0
+        - 0
+        - *id001
+    name: Embedding-Token-Segment
+  - class_name: PositionEmbedding
+    config:
+      activity_regularizer: null
+      embeddings_constraint: null
+      embeddings_initializer:
+        class_name: RandomUniform
+        config: {maxval: 0.05, minval: -0.05, seed: null}
+      embeddings_regularizer: null
+      input_dim: 420
+      mask_zero: false
+      mode: add
+      name: Embedding-Position
+      output_dim: 256
+      trainable: true
+    inbound_nodes:
+    - - - Embedding-Token-Segment
+        - 0
+        - 0
+        - {}
+    name: Embedding-Position
+  - class_name: Dropout
+    config: {name: Embedding-Dropout, noise_shape: null, rate: 0.05, seed: null, trainable: true}
+    inbound_nodes:
+    - - - Embedding-Position
+        - 0
+        - 0
+        - {}
+    name: Embedding-Dropout
+  - class_name: LayerNormalization
+    config: {name: Embedding-Norm, trainable: true}
+    inbound_nodes:
+    - - - Embedding-Dropout
+        - 0
+        - 0
+        - {}
+    name: Embedding-Norm
+  - class_name: MultiHeadAttention
+    config:
+      activation: &id004 !!python/name:keras.activations.linear ''
+      bias_constraint: null
+      bias_initializer: !!python/object:keras.initializers.Zeros {}
+      bias_regularizer: null
+      head_num: 2
+      history_only: false
+      kernel_constraint: null
+      kernel_initializer: !!python/object:keras.initializers.VarianceScaling {distribution: normal,
+        mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: Encoder-1-MultiHeadSelfAttention
+      trainable: true
+      use_bias: true
+    inbound_nodes:
+    - - - Embedding-Norm
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-MultiHeadSelfAttention
+  - class_name: Dropout
+    config: {name: Encoder-1-MultiHeadSelfAttention-Dropout, noise_shape: null, rate: 0.05,
+      seed: null, trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-MultiHeadSelfAttention
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-MultiHeadSelfAttention-Dropout
+  - class_name: Add
+    config: {name: Encoder-1-MultiHeadSelfAttention-Add, trainable: true}
+    inbound_nodes:
+    - - - Embedding-Norm
+        - 0
+        - 0
+        - &id002 {}
+      - - Encoder-1-MultiHeadSelfAttention-Dropout
+        - 0
+        - 0
+        - *id002
+    name: Encoder-1-MultiHeadSelfAttention-Add
+  - class_name: LayerNormalization
+    config: {name: Encoder-1-MultiHeadSelfAttention-Norm, trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-MultiHeadSelfAttention-Add
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-MultiHeadSelfAttention-Norm
+  - class_name: FeedForward
+    config:
+      activation: &id006 !!python/name:keras_bert.bert.gelu ''
+      bias_constraint: null
+      bias_initializer: !!python/object:keras.initializers.Zeros {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer: !!python/object:keras.initializers.VarianceScaling {distribution: normal,
+        mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: Encoder-1-FeedForward
+      trainable: true
+      units: 100
+      use_bias: true
+    inbound_nodes:
+    - - - Encoder-1-MultiHeadSelfAttention-Norm
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-FeedForward
+  - class_name: Dropout
+    config: {name: Encoder-1-FeedForward-Dropout, noise_shape: null, rate: 0.05, seed: null,
+      trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-FeedForward
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-FeedForward-Dropout
+  - class_name: Add
+    config: {name: Encoder-1-FeedForward-Add, trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-MultiHeadSelfAttention-Norm
+        - 0
+        - 0
+        - &id003 {}
+      - - Encoder-1-FeedForward-Dropout
+        - 0
+        - 0
+        - *id003
+    name: Encoder-1-FeedForward-Add
+  - class_name: LayerNormalization
+    config: {name: Encoder-1-FeedForward-Norm, trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-FeedForward-Add
+        - 0
+        - 0
+        - {}
+    name: Encoder-1-FeedForward-Norm
+  - class_name: MultiHeadAttention
+    config:
+      activation: *id004
+      bias_constraint: null
+      bias_initializer: !!python/object:keras.initializers.Zeros {}
+      bias_regularizer: null
+      head_num: 2
+      history_only: false
+      kernel_constraint: null
+      kernel_initializer: !!python/object:keras.initializers.VarianceScaling {distribution: normal,
+        mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: Encoder-2-MultiHeadSelfAttention
+      trainable: true
+      use_bias: true
+    inbound_nodes:
+    - - - Encoder-1-FeedForward-Norm
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-MultiHeadSelfAttention
+  - class_name: Dropout
+    config: {name: Encoder-2-MultiHeadSelfAttention-Dropout, noise_shape: null, rate: 0.05,
+      seed: null, trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-MultiHeadSelfAttention
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-MultiHeadSelfAttention-Dropout
+  - class_name: Add
+    config: {name: Encoder-2-MultiHeadSelfAttention-Add, trainable: true}
+    inbound_nodes:
+    - - - Encoder-1-FeedForward-Norm
+        - 0
+        - 0
+        - &id005 {}
+      - - Encoder-2-MultiHeadSelfAttention-Dropout
+        - 0
+        - 0
+        - *id005
+    name: Encoder-2-MultiHeadSelfAttention-Add
+  - class_name: LayerNormalization
+    config: {name: Encoder-2-MultiHeadSelfAttention-Norm, trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-MultiHeadSelfAttention-Add
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-MultiHeadSelfAttention-Norm
+  - class_name: FeedForward
+    config:
+      activation: *id006
+      bias_constraint: null
+      bias_initializer: !!python/object:keras.initializers.Zeros {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer: !!python/object:keras.initializers.VarianceScaling {distribution: normal,
+        mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: Encoder-2-FeedForward
+      trainable: true
+      units: 100
+      use_bias: true
+    inbound_nodes:
+    - - - Encoder-2-MultiHeadSelfAttention-Norm
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-FeedForward
+  - class_name: Dropout
+    config: {name: Encoder-2-FeedForward-Dropout, noise_shape: null, rate: 0.05, seed: null,
+      trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-FeedForward
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-FeedForward-Dropout
+  - class_name: Add
+    config: {name: Encoder-2-FeedForward-Add, trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-MultiHeadSelfAttention-Norm
+        - 0
+        - 0
+        - &id007 {}
+      - - Encoder-2-FeedForward-Dropout
+        - 0
+        - 0
+        - *id007
+    name: Encoder-2-FeedForward-Add
+  - class_name: LayerNormalization
+    config: {name: Encoder-2-FeedForward-Norm, trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-FeedForward-Add
+        - 0
+        - 0
+        - {}
+    name: Encoder-2-FeedForward-Norm
+  - class_name: Dense
+    config:
+      activation: gelu
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: VarianceScaling
+        config: {distribution: uniform, mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: MLM-Dense
+      trainable: true
+      units: 256
+      use_bias: true
+    inbound_nodes:
+    - - - Encoder-2-FeedForward-Norm
+        - 0
+        - 0
+        - {}
+    name: MLM-Dense
+  - class_name: LayerNormalization
+    config: {name: MLM-Norm, trainable: true}
+    inbound_nodes:
+    - - - MLM-Dense
+        - 0
+        - 0
+        - {}
+    name: MLM-Norm
+  - class_name: Extract
+    config: {index: 0, name: Extract, trainable: true}
+    inbound_nodes:
+    - - - Encoder-2-FeedForward-Norm
+        - 0
+        - 0
+        - {}
+    name: Extract
+  - class_name: EmbeddingSimilarity
+    config:
+      constraint: null
+      initializer: !!python/object:keras.initializers.Zeros {}
+      name: MLM-Sim
+      regularizer: null
+      trainable: true
+    inbound_nodes:
+    - - - MLM-Norm
+        - 0
+        - 0
+        - &id008 {}
+      - - Embedding-Token
+        - 0
+        - 1
+        - *id008
+    name: MLM-Sim
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, 420]
+      dtype: float32
+      name: Input-Masked
+      sparse: false
+    inbound_nodes: []
+    name: Input-Masked
+  - class_name: Dense
+    config:
+      activation: tanh
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: VarianceScaling
+        config: {distribution: uniform, mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: NSP-Dense
+      trainable: true
+      units: 256
+      use_bias: true
+    inbound_nodes:
+    - - - Extract
+        - 0
+        - 0
+        - {}
+    name: NSP-Dense
+  - class_name: Masked
+    config: {name: MLM, return_masked: false, trainable: true}
+    inbound_nodes:
+    - - - MLM-Sim
+        - 0
+        - 0
+        - &id009 {}
+      - - Input-Masked
+        - 0
+        - 0
+        - *id009
+    name: MLM
+  - class_name: Dense
+    config:
+      activation: softmax
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: VarianceScaling
+        config: {distribution: uniform, mode: fan_avg, scale: 1.0, seed: null}
+      kernel_regularizer: null
+      name: NSP
+      trainable: true
+      units: 2
+      use_bias: true
+    inbound_nodes:
+    - - - NSP-Dense
+        - 0
+        - 0
+        - {}
+    name: NSP
+  name: model_1
+  output_layers:
+  - [MLM, 0, 0]
+  - [NSP, 0, 0]
+keras_version: 2.2.4

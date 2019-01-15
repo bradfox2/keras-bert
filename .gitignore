@@ -1,3 +1,6 @@
+tinybert.hdf5
+sentence_pairs.pkl
+gitignore/
 bert_model.ckpt.data-00000-of-00001
 
 # Byte-compiled / optimized / DLL files

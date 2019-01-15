@@ -135,6 +135,7 @@ def get_base_dict():
 
 
 def gen_batch_inputs(sentence_pairs,
+                     batch_size,
                      token_dict,
                      token_list,
                      seq_len=512,
@@ -144,7 +145,8 @@ def gen_batch_inputs(sentence_pairs,
                      swap_sentence_rate=0.5,
                      force_mask=True):
     """Generate a batch of inputs and outputs for training.
-
+    
+    :param batch_size: Integer len of sentence pairs in one batch.
     :param sentence_pairs: A list of pairs containing lists of tokens.
     :param token_dict: The dictionary containing special tokens.
     :param token_list: A list containing all tokens.
@@ -156,7 +158,12 @@ def gen_batch_inputs(sentence_pairs,
     :param force_mask: At least one position will be masked.
     :return: All the inputs and outputs.
     """
-    batch_size = len(sentence_pairs)
+    
+    #sentence_pairs = sentence_pairs[1:1000]
+    
+    #print(len(sentence_pairs))
+    
+    #batch_size = len(sentence_pairs)
     base_dict = get_base_dict()
     unknown_index = token_dict[TOKEN_UNK]
     # Generate sentence swapping mapping
